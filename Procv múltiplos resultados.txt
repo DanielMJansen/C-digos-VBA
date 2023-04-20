@@ -1,0 +1,32 @@
+
+Public Function Vlookup2(ByVal lookup_value As String, ByVal cell_range As Range, ByVal column_index As Integer) As Variant
+
+Dim cell As Range
+Dim Result_String As String
+
+
+
+On Error GoTo errhandle
+
+
+For Each cell In cell_range
+
+    If cell.Value = lookup_value Then
+        If cell.Offset(0, column_index - 1).Value <> "" Then
+            If Not Result_String Like "*" & cell.Offset(0, column_index - 1).Value & "*" Then
+            Result_String = Result_String & ", " & cell.Offset(0, column_index - 1).Value
+            End If
+        End If
+    End If
+
+Next cell
+
+Vlookup2 = LTrim(Right(Result_String, Len(Result_String) - 1))
+
+Exit Function
+
+errhandle:
+Vlookup2 = "B"
+
+
+End Function
