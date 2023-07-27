@@ -1,0 +1,18 @@
+set wks = ThisWorkbook.Sheets("nomeabaplanilha") 'setar a aba que contenha a tabela que queira atualizar.
+
+With wks
+    .Activate > entrar na aba
+    Range("A2").Activate > Escolher um range em que a tabela se encontre, para ativar a mesma e coletar o nome dela na varíavel abaixo
+    test = ActiveCell.ListObject.Name
+    ThisWorkbook.Connections("Consulta - " & test).Refresh > Dar refresh na tabela especifica.
+    End With
+
+
+
+Caso não seja possível encontrar o nome correto da tabela (as vezes o nome se altera no background), rodar o for abaixo para ver o nome correto de todas as tabelas do
+Workbook e inserir no nome correto no comando de Refresh acima.
+
+
+   For Each qry In ThisWorkbook.Connections
+        Debug.Print qry.Name
+    Next qry
