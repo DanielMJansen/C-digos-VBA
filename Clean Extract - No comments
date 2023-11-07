@@ -1,0 +1,82 @@
+Sub EXPORT_TABLE_FROM_SAP(ByVal session As Object, ByVal wks As Worksheet)
+
+    
+    Dim table As Object 'DEFINE TABELA DO SAP COMO OBJETO
+    Dim rows, cols As Integer 'DEFINE QUE A QUANTIDADE DE  LINHAS E COLUNAS SÃO INTEIROS
+    Dim columns As Object 'DEFINE COLUNAS COMO OBJETO ARRAY, ONDE DEVE RECEBER O NOME DE TODAS AS COLUNAS
+    Dim SumCols As Variant
+    Dim e As Variant
+    Dim arrcol(), arrayconsolidador() As Variant
+    Dim StringArray() As String, Cell As Range
+
+    
+    Set table = session.findById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell") 'DEFINE TABELA DO SAP
+    Set columns = table.ColumnOrder  'DEFINE ORDEM NAS COLUNAS E OS NOMES DE CADA UMA
+    rows = table.RowCount - 1 'CONTA QUANTAS LINHAS TEM NA TABELA, DIMINUI 1 UNIDADE, POIS O INICIO DA CONTAGEM É NO 0
+    cols = table.ColumnCount - 1 'CONTA QUANTAS COLUNAS TEM NA TABELA, DIMINUI 1 UNIDADE, POIS O INICIO DA CONTAGEM É NO 0
+    ReDim Preserve arrcol(0 To rows, 0 To cols) 'REDEFINE O ARRAY DE COLUNAS PARA NÃO RESTAR VESTIGIOS DE OUTRAS CONSULTAS
+        table.SetCurrentCell 0, CStr(columns(0))
+        table.FirstVisibleRow = 0
+        session.findById("wnd[0]").maximize
+        session.findById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell").pressToolbarContextButton "&MB_EXPORT"
+        session.findById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell").selectContextMenuItem "&PC"
+        session.findById("wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[4,0]").Select
+        session.findById("wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[4,0]").SetFocus
+        session.findById("wnd[1]/tbar[0]/btn[0]").press
+
+    Select Case wks.Name
+    
+    Case "YCTGL_MAIN"
+    colunafinal = "L"
+
+    
+    Case "YEXBR_CIF_AGRI"
+    colunafinal = "E"
+    
+    Case "J_1BNFDOC", "WBHD"
+    colunafinal = "B"
+
+    
+    Case "YPRGL_MIGO_MIRO"
+    colunafinal = "V"
+    
+    
+    Case "RBKP"
+    colunafinal = "C"
+    
+    
+    End Select
+    
+        With wks
+            wks.Activate
+            wks.Paste Destination:=Range("A1:" & colunafinal & (rows + 7))
+            contalinha = .Cells(.rows.Count, "A").End(xlUp).Row
+            For i = 1 To contalinha
+            validasujeira = .Cells(i, 1).Value
+            If Left(validasujeira, 8) = "--------" Or Left(validasujeira, 1) <> "|" Then
+            .Range("A" & i).Delete
+            i = i - 1
+            End If
+            If validasujeira = "" Then
+            Exit For
+            End If
+            Next
+            contalinha = .Cells(.rows.Count, "A").End(xlUp).Row
+                If colunafinal = "A" Then
+                .Range("A1:" & colunafinal & contalinha).Replace What:="~|", Replacement:=""
+                Else
+                    For Each Cell In .Range("A1:A" & contalinha)
+                    Cell = Right(Cell, Len(Cell) - 1)
+                    Cell = Left(Cell, Len(Cell) - 1)
+                    Cell = Replace(Cell, Chr(160), " ")
+                    Cell = Application.Trim(Cell)
+                    StringArray = Split(Cell, "|")
+                        For b = 0 To UBound(StringArray)
+                        Cell.Offset(, b) = StringArray(b)
+                        Next b
+                    Next
+                End If
+        End With
+    
+End Sub
+
